@@ -88,3 +88,6 @@ def mobilenet_19(**kwargs):
     mode = kwargs["mode"] if "mode" in kwargs else 'train'
     model = MobileNetV2(BottleneckMulti, [1, 2, 3, 4, 3, 3, 1], n_spk, num_emed, mode)
     return model
+
+
+

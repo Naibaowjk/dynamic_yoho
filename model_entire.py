@@ -1,7 +1,6 @@
-# create the entire model and split model
+# create the entire model & show result
 import torch
 from mobilenet import mobilenet_19
-from part import build_part
 import os
 import numpy as np
 import torch.nn as nn
@@ -18,10 +17,6 @@ model_path = "./model_params.pkl"
 model.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
 # model = model.cuda()
 model.eval()
-model_part1, model_part2, model_part3 = build_part(model, mode="inference")
-model_part1.eval()
-model_part2.eval()
-model_part3.eval()
 
 # prepare data
 def load_data(path_list):
