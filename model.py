@@ -45,14 +45,18 @@ s2_abnormal = "./data/abnormals/slider/0.wav"
 s3_abnormal = "./data/abnormals/fan/0.wav"
 s4_abnormal = "./data/abnormals/valve/0.wav"
 
+# 160000
 mix_baseline = load_data([s1_normal, s2_normal, s3_normal, s4_normal])
 mix = load_data([s1_abnormal, s2_normal, s3_normal, s4_abnormal])
+# 98304
 mix_baseline_short = mix_baseline[:, :98304]
 mix_short = mix[:, :98304]
+
 print(mix_baseline.shape)
 print(mix.shape)
 print(mix_baseline_short.shape)
 print(mix_short.shape)
+
 # conver numpy to Tensor
 mix_baseline_short = torch.Tensor(mix_baseline_short).to("cpu")
 mix_short = torch.Tensor(mix_short).to("cpu")
@@ -60,6 +64,7 @@ mix_short = torch.Tensor(mix_short).to("cpu")
 # compute results of entire ia-net-lite
 print(mix_baseline_short.size())
 print(mix_short.size())
+
 t_start = time.perf_counter()
 features_baseline = model(mix_baseline_short.unsqueeze(0))
 t_entire = time.perf_counter() - t_start
