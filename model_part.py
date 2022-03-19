@@ -61,9 +61,6 @@ print(mix_short.shape)
 mix_baseline_short = torch.Tensor(mix_baseline_short).to("cpu")
 mix_short = torch.Tensor(mix_short).to("cpu")
 
-# compute results of entire ia-net-lite
-print(mix_baseline_short.size())
-print(mix_short.size())
 
 # compute results of distributed ia-net-lite
 t_start = time.perf_counter()

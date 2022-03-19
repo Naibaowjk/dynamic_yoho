@@ -1,15 +1,18 @@
-# create the entire model & show result
+# create the part model & show result
 import torch
 from mobilenet import mobilenet_19
+from mobilenet_part import build_part
 import os
 import numpy as np
 import torch.nn as nn
 import librosa
 import time
 from sklearn import preprocessing
-np.random.seed(42)
-from mobilenet_split import ConvLayers, FCLayers
 from spliter import Spliter
+from combiner import Combiner
+from mobilenet_part_spilt import Part_Conv_3, Part_FC_3
+np.random.seed(42)
+
 
 print(os.getcwd())
 
@@ -18,7 +21,10 @@ model_path = "./model_params.pkl"
 model.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
 # model = model.cuda()
 model.eval()
-
+model_part1, model_part2, model_part3 = build_part(model, mode="inference")
+model_part1.eval()
+model_part2.eval()
+model_part3.eval()
 
 # prepare data
 def load_data(path_list):
@@ -59,16 +65,30 @@ mix_baseline_short = torch.Tensor(mix_baseline_short).to("cpu")
 mix_short = torch.Tensor(mix_short).to("cpu")
 
 
-# Run this two layers
-conv_layers = ConvLayers(model, mode="inference")
-fc_layer = FCLayers(model, mode="inference")
+# start running
+part_3_conv = Part_Conv_3(model, mode="inference")
+part_3_fc = Part_FC_3(model, mode="inference")
 
-
-s = Spliter(conv_layers, 98304, 1024, 32)
-t_start = time.perf_counter()
-ans = s.split_and_compute(mix_short)
-print(ans[0].size())
-t_split = time.perf_counter() - t_start
-feature_combine = torch.cat(ans, dim=2)
-feature_combine = fc_layer(feature_combine)
-print("Split computation time: {}".format(t_split))
+s1 = Spliter(model_part1, 98304, 256, 32)
+ans = s1.split_and_compute(mix_short)
+print(len(ans))
+c2 = Combiner(model_part2, -1, -1, 2)
+ans_2 = []
+count = 0
+for x in ans:
+    out = c2.combine_and_compute(x)
+    if out is not None:
+        count += 1
+        ans_2.append(out)
+print(len(ans_2))
+c3 = Combiner(part_3_conv, -1, -1, 8)
+ans_3 = []
+for x in ans_2:
+    out = c3.combine_and_compute(x)
+    if out is not None:
+        ans_3.append(out)
+print(ans_3[0].size())
+print(len(ans_3))
+feature_combine_2 = torch.cat(ans_3, dim=2)
+print(feature_combine_2.size())
+feature_combine_2 = part_3_fc(feature_combine_2)
