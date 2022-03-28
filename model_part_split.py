@@ -63,32 +63,49 @@ print(mix_short.shape)
 # conver numpy to Tensor
 mix_baseline_short = torch.Tensor(mix_baseline_short).to("cpu")
 mix_short = torch.Tensor(mix_short).to("cpu")
+print(mix_short.shape)
+
 
 
 # start running
 part_3_conv = Part_Conv_3(model, mode="inference")
 part_3_fc = Part_FC_3(model, mode="inference")
 
+start_time = time.time()
+
 s1 = Spliter(model_part1, 98304, 256, 32)
-ans = s1.split_and_compute(mix_short)
-print(len(ans))
+ans, ans_time= s1.split_and_compute(mix_short)
+split_list = print(len(ans))
 c2 = Combiner(model_part2, -1, -1, 2)
 ans_2 = []
+ans_time2 = []
 count = 0
 for x in ans:
-    out = c2.combine_and_compute(x)
+    out, time_run= c2.combine_and_compute(x)
     if out is not None:
+        ans_time2.append(time_run)
         count += 1
         ans_2.append(out)
 print(len(ans_2))
 c3 = Combiner(part_3_conv, -1, -1, 8)
 ans_3 = []
+ans_time3= []
 for x in ans_2:
-    out = c3.combine_and_compute(x)
+    out, time_run= c3.combine_and_compute(x)
     if out is not None:
         ans_3.append(out)
+        ans_time3.append(time_run)
 print(ans_3[0].size())
 print(len(ans_3))
 feature_combine_2 = torch.cat(ans_3, dim=2)
 print(feature_combine_2.size())
 feature_combine_2 = part_3_fc(feature_combine_2)
+
+
+end_time = time.time()
+print(f"total time: {end_time - start_time}")
+
+print(f" split running model use : {sum(ans_time)}")
+print(f"combine2 running model use: {sum(ans_time2)}")
+print(f"combine3 running model use: {sum(ans_time3)}")
+print(f"sum model use {sum(ans_time)+sum(ans_time2)+sum(ans_time3)}")
